@@ -1,9 +1,9 @@
 #!/bin/bash
 # Wintarch Installer Bootstrap
-# Usage: curl -fsSL https://raw.githubusercontent.com/winterberryice/arch/master/boot.sh | bash
+# Usage: curl -fsSL https://raw.githubusercontent.com/kacpersledz/arch/master/boot.sh | bash
 #
 # Environment variables:
-#   WINTARCH_REPO - GitHub repo (default: winterberryice/arch)
+#   WINTARCH_REPO - GitHub repo (default: kacpersledz/arch)
 #   WINTARCH_REF  - Branch/tag to use (default: master)
 
 set -e
@@ -48,7 +48,7 @@ echo ":: Installing git..."
 sudo pacman -Sy --noconfirm --needed git
 
 # Configuration
-WINTARCH_REPO="${WINTARCH_REPO:-winterberryice/arch}"
+WINTARCH_REPO="${WINTARCH_REPO:-kacpersledz/arch}"
 WINTARCH_REF="${WINTARCH_REF:-master}"
 INSTALL_DIR="/tmp/wintarch-installer"
 

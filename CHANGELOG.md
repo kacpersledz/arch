@@ -176,11 +176,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   **Git Pager:** Prevented `wintarch-update` from failing on minimal systems by setting `GIT_PAGER=cat`.
 -   **Git Ownership:** Fixed "dubious ownership" errors from `git` by adding `/opt/wintarch` to the system's `safe.directory` list during installation.
 
-[unreleased]: https://github.com/winterberryice/arch/compare/v0.5.0...HEAD
-[0.5.0]: https://github.com/winterberryice/arch/compare/v0.4.0...v0.5.0
-[0.4.0]: https://github.com/winterberryice/arch/compare/v0.3.2...v0.4.0
-[0.3.2]: https://github.com/winterberryice/arch/compare/v0.3.1...v0.3.2
-[0.3.1]: https://github.com/winterberryice/arch/compare/v0.3.0...v0.3.1
-[0.3.0]: https://github.com/winterberryice/arch/compare/v0.2.0...v0.3.0
-[0.2.0]: https://github.com/winterberryice/arch/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/winterberryice/arch/releases/tag/v0.1.0
+[unreleased]: https://github.com/kacpersledz/arch/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/kacpersledz/arch/compare/v0.4.0...v0.5.0
+[0.4.0]: https://github.com/kacpersledz/arch/compare/v0.3.2...v0.4.0
+[0.3.2]: https://github.com/kacpersledz/arch/compare/v0.3.1...v0.3.2
+[0.3.1]: https://github.com/kacpersledz/arch/compare/v0.3.0...v0.3.1
+[0.3.0]: https://github.com/kacpersledz/arch/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/kacpersledz/arch/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/kacpersledz/arch/releases/tag/v0.1.0

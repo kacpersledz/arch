@@ -15,7 +15,7 @@ This guide is for developers working on Wintarch itself. If you're looking for h
 
 ```bash
 # Clone the repo
-git clone https://github.com/winterberryice/arch.git
+git clone https://github.com/kacpersledz/arch.git
 cd arch
 
 # Test in a VM
