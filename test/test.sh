@@ -126,7 +126,7 @@ boot_iso() {
     echo "  ssh -p $SSH_PORT root@localhost"
     echo
     info "To run the installer after SSH:"
-    echo "  git clone https://github.com/winterberryice/arch.git"
+    echo "  git clone https://github.com/kacpersledz/arch.git"
     echo "  cd arch && ./install.sh"
     echo
 
@@ -211,7 +211,7 @@ After booting the ISO:
   2. Start SSH: systemctl start sshd
   3. Connect: ssh -p 2222 root@localhost
   4. Clone and run installer:
-     git clone https://github.com/winterberryice/arch.git
+     git clone https://github.com/kacpersledz/arch.git
      cd arch && ./install.sh
 EOF
 }

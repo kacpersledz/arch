@@ -3,7 +3,7 @@
 # Dual-boot capable with LUKS encryption and BTRFS snapshots
 #
 # Usage: Run from Arch Linux live environment
-#        curl -fsSL https://raw.githubusercontent.com/winterberryice/arch/master/boot.sh | bash
+#        curl -fsSL https://raw.githubusercontent.com/kacpersledz/arch/master/boot.sh | bash
 
 set -eEuo pipefail
 

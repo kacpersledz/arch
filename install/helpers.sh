@@ -174,7 +174,7 @@ catch_errors() {
 
         echo
         gum style "Please report issues at:"
-        gum style --foreground 4 "https://github.com/winterberryice/arch/issues"
+        gum style --foreground 4 "https://github.com/kacpersledz/arch/issues"
     else
         echo "=== Installation stopped! ==="
         echo "Exit code: $exit_code"
@@ -186,7 +186,7 @@ catch_errors() {
         fi
         echo
         echo "Please report issues at:"
-        echo "https://github.com/winterberryice/arch/issues"
+        echo "https://github.com/kacpersledz/arch/issues"
     fi
 }
 
