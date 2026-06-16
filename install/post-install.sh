@@ -293,6 +293,26 @@ install_limine_snapper_packages_from_cachyos_binary_fallback() {
     return 0
 }
 
+run_chroot_logged_allow_fail() {
+    local command="$1"
+    local status
+    local err_trap
+
+    err_trap=$(trap -p ERR || true)
+    trap - ERR
+
+    set +e
+    chroot_run "$command" 2>&1 | tee -a "$LOG_FILE" >&2
+    status=${PIPESTATUS[0]}
+    set -e
+
+    if [[ -n "$err_trap" ]]; then
+        eval "$err_trap"
+    fi
+
+    return "$status"
+}
+
 install_limine_snapper_packages() {
     log_info "Installing Limine-Snapper integration packages from AUR..."
     echo >&2
@@ -302,7 +322,7 @@ install_limine_snapper_packages() {
 
     # Check if packages exist in official repos first
     if chroot_run "pacman -Ss limine-snapper-sync" &>/dev/null; then
-        if ! chroot_run "pacman -S --noconfirm --needed limine-snapper-sync limine-mkinitcpio-hook" 2>&1 | tee -a "$LOG_FILE" >&2; then
+        if ! run_chroot_logged_allow_fail "pacman -S --noconfirm --needed limine-snapper-sync limine-mkinitcpio-hook"; then
             log_warn "Failed to install Limine-Snapper packages from pacman repos"
             try_yay=true
         else
@@ -317,11 +337,16 @@ install_limine_snapper_packages() {
         if ! install_aur_helper; then
             log_warn "Failed to install yay for Limine-Snapper packages"
         else
-            if ! chroot_run "
+            if ! run_chroot_logged_allow_fail "
+                set -euo pipefail
+
                 echo '$USERNAME ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/temp-build
+                trap 'rm -f /etc/sudoers.d/temp-build' EXIT
+                chmod 440 /etc/sudoers.d/temp-build
                 sudo -u '$USERNAME' yay -S --noconfirm --needed limine-snapper-sync limine-mkinitcpio-hook
                 rm -f /etc/sudoers.d/temp-build
-            " 2>&1 | tee -a "$LOG_FILE" >&2; then
+                trap - EXIT
+            "; then
                 log_warn "Failed to install Limine-Snapper packages from yay/AUR"
             else
                 install_succeeded=true
