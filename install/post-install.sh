@@ -195,31 +195,146 @@ enable_pacman_colors() {
     log_success "Colors enabled for package managers"
 }
 
+get_aur_package_version() {
+    local package_name="$1"
+
+    chroot_run "
+        set -euo pipefail
+
+        temp_dir=\$(mktemp -d /tmp/${package_name}.XXXXXX)
+        trap 'rm -rf \"\$temp_dir\"' EXIT
+
+        git clone --depth 1 https://aur.archlinux.org/${package_name}.git \"\$temp_dir/${package_name}\" >/dev/null 2>&1
+
+        srcinfo_file=\"\$temp_dir/${package_name}/.SRCINFO\"
+        if [ ! -f \"\$srcinfo_file\" ]; then
+            echo 'Missing .SRCINFO for ${package_name}' >&2
+            exit 1
+        fi
+
+        pkgver=\$(awk -F ' = ' '/^[[:space:]]*pkgver = / { print \$2; exit }' \"\$srcinfo_file\")
+        pkgrel=\$(awk -F ' = ' '/^[[:space:]]*pkgrel = / { print \$2; exit }' \"\$srcinfo_file\")
+
+        if [ -z \"\$pkgver\" ] || [ -z \"\$pkgrel\" ]; then
+            echo 'Failed to parse pkgver/pkgrel for ${package_name}' >&2
+            exit 1
+        fi
+
+        printf '%s-%s\n' \"\$pkgver\" \"\$pkgrel\"
+    "
+}
+
+install_limine_snapper_packages_from_cachyos_binary_fallback() {
+    log_warn "Using CachyOS binary fallback for Limine-Snapper packages after normal install path failed"
+    echo >&2
+
+    if [[ "${DISABLE_CACHYOS_LIMINE_BINARY_FALLBACK:-0}" == "1" ]]; then
+        log_warn "CachyOS binary fallback disabled via DISABLE_CACHYOS_LIMINE_BINARY_FALLBACK=1"
+        return 1
+    fi
+
+    local mkinitcpio_version
+    local snapper_version
+
+    log_info "Detecting exact AUR versions for binary fallback..."
+    mkinitcpio_version=$(get_aur_package_version "limine-mkinitcpio-hook") || {
+        log_warn "Failed to determine AUR version for limine-mkinitcpio-hook"
+        return 1
+    }
+    snapper_version=$(get_aur_package_version "limine-snapper-sync") || {
+        log_warn "Failed to determine AUR version for limine-snapper-sync"
+        return 1
+    }
+
+    log_info "Detected AUR versions: limine-mkinitcpio-hook=${mkinitcpio_version}, limine-snapper-sync=${snapper_version}"
+
+    chroot_run "
+        set -euo pipefail
+
+        if [ \"\$(uname -m)\" != 'x86_64' ]; then
+            echo 'CachyOS binary fallback is supported only on x86_64' >&2
+            exit 1
+        fi
+
+        pacman -S --noconfirm --needed \
+            efibootmgr btrfs-progs libnotify mkinitcpio bash grep tar curl base-devel git
+
+        temp_dir=\$(mktemp -d /tmp/limine-cachyos-fallback.XXXXXX)
+        trap 'rm -rf \"\$temp_dir\"' EXIT
+        cd \"\$temp_dir\"
+
+        base_url='https://mirror.cachyos.org/repo/x86_64/cachyos'
+        mkinitcpio_file='limine-mkinitcpio-hook-${mkinitcpio_version}-x86_64.pkg.tar.zst'
+        snapper_file='limine-snapper-sync-${snapper_version}-x86_64.pkg.tar.zst'
+        mkinitcpio_url=\"\$base_url/\$mkinitcpio_file\"
+        snapper_url=\"\$base_url/\$snapper_file\"
+
+        echo \"Checking exact CachyOS URL: \$mkinitcpio_url\" >&2
+        curl -fI \"\$mkinitcpio_url\" >/dev/null
+
+        echo \"Checking exact CachyOS URL: \$snapper_url\" >&2
+        curl -fI \"\$snapper_url\" >/dev/null
+
+        echo \"Downloading \$mkinitcpio_file\" >&2
+        curl -fL --retry 3 --retry-delay 2 -o \"\$mkinitcpio_file\" \"\$mkinitcpio_url\"
+
+        echo \"Downloading \$snapper_file\" >&2
+        curl -fL --retry 3 --retry-delay 2 -o \"\$snapper_file\" \"\$snapper_url\"
+
+        # This fallback intentionally avoids adding the CachyOS repo or trust root.
+        # It relies on HTTPS transport, exact AUR-version matching, and pacman dependency checks.
+        pacman -U --noconfirm --needed \"\$mkinitcpio_file\" \"\$snapper_file\"
+    " 2>&1 | tee -a "$LOG_FILE" >&2 || {
+        log_warn "CachyOS binary fallback failed. Ensure exact-version binaries exist and downloads are reachable."
+        return 1
+    }
+
+    log_success "CachyOS binary fallback installed Limine-Snapper packages"
+    return 0
+}
+
 install_limine_snapper_packages() {
     log_info "Installing Limine-Snapper integration packages from AUR..."
     echo >&2
 
+    local install_succeeded=false
+    local try_yay=false
+
     # Check if packages exist in official repos first
     if chroot_run "pacman -Ss limine-snapper-sync" &>/dev/null; then
-        chroot_run "pacman -S --noconfirm --needed limine-snapper-sync limine-mkinitcpio-hook" 2>&1 | tee -a "$LOG_FILE" >&2 || {
+        if ! chroot_run "pacman -S --noconfirm --needed limine-snapper-sync limine-mkinitcpio-hook" 2>&1 | tee -a "$LOG_FILE" >&2; then
             log_warn "Failed to install Limine-Snapper packages from pacman repos"
-            return 1
-        }
+            try_yay=true
+        else
+            install_succeeded=true
+        fi
     else
+        try_yay=true
+    fi
+
+    if [[ "$install_succeeded" != true ]] && [[ "$try_yay" == true ]]; then
         # Fall back to AUR
         if ! install_aur_helper; then
             log_warn "Failed to install yay for Limine-Snapper packages"
+        else
+            if ! chroot_run "
+                echo '$USERNAME ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/temp-build
+                sudo -u '$USERNAME' yay -S --noconfirm --needed limine-snapper-sync limine-mkinitcpio-hook
+                rm -f /etc/sudoers.d/temp-build
+            " 2>&1 | tee -a "$LOG_FILE" >&2; then
+                log_warn "Failed to install Limine-Snapper packages from yay/AUR"
+            else
+                install_succeeded=true
+            fi
+        fi
+    fi
+
+    if [[ "$install_succeeded" != true ]]; then
+        log_warn "Normal Limine-Snapper install path failed; attempting exact-version CachyOS binary fallback"
+        if ! install_limine_snapper_packages_from_cachyos_binary_fallback; then
+            log_warn "Failed to install Limine-Snapper packages via all available methods"
             return 1
         fi
-
-        chroot_run "
-            echo '$USERNAME ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/temp-build
-            sudo -u '$USERNAME' yay -S --noconfirm --needed limine-snapper-sync limine-mkinitcpio-hook
-            rm -f /etc/sudoers.d/temp-build
-        " 2>&1 | tee -a "$LOG_FILE" >&2 || {
-            log_warn "Failed to install Limine-Snapper packages"
-            return 1
-        }
     fi
 
     # Update mkinitcpio hooks to include btrfs-overlayfs
