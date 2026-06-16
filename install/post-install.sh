@@ -201,11 +201,14 @@ install_limine_snapper_packages() {
 
     # Check if packages exist in official repos first
     if chroot_run "pacman -Ss limine-snapper-sync" &>/dev/null; then
-        chroot_run "pacman -S --noconfirm --needed limine-snapper-sync limine-mkinitcpio-hook" 2>&1 | tee -a "$LOG_FILE" >&2
+        chroot_run "pacman -S --noconfirm --needed limine-snapper-sync limine-mkinitcpio-hook" 2>&1 | tee -a "$LOG_FILE" >&2 || {
+            log_warn "Failed to install Limine-Snapper packages from pacman repos"
+            return 1
+        }
     else
         # Fall back to AUR
         if ! install_aur_helper; then
-            log_warn "Skipping Limine-Snapper AUR packages"
+            log_warn "Failed to install yay for Limine-Snapper packages"
             return 1
         fi
 
@@ -229,7 +232,10 @@ install_limine_snapper_packages() {
 
     # Enable the sync service
     echo "Enabling limine-snapper-sync service..." >&2
-    chroot_run "systemctl enable limine-snapper-sync.service" 2>&1 | tee -a "$LOG_FILE" >&2 || true
+    chroot_run "systemctl enable limine-snapper-sync.service" 2>&1 | tee -a "$LOG_FILE" >&2 || {
+        log_warn "Failed to enable limine-snapper-sync.service"
+        return 1
+    }
 
     log_success "Limine-Snapper integration installed"
     return 0
@@ -510,8 +516,8 @@ run_post_install() {
     # Install first-boot service (configures snapper on first boot when D-Bus is available)
     install_first_boot_service
 
-    # Install AUR packages for snapshot booting (optional, may fail)
-    install_limine_snapper_packages || true
+    # Install snapshot boot integration
+    install_limine_snapper_packages
 
     # Install user AUR packages (brave, vscode, clipboard-manager)
     install_aur_packages || true
