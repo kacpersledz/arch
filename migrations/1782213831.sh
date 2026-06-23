@@ -256,9 +256,9 @@ build_and_validate_removal_plan() {
     fi
 
     echo "Calculating pacman removal transaction..."
-    # pacman rejects --nosave (-n) together with --print. Omitting -n changes
-    # only .pacsave handling, not the package set calculated for removal.
-    if ! plan_output="$(pacman -Rs --print --print-format '%n' "${INSTALLED_CLEANUP[@]}")"; then
+    # Do not recursively remove dependencies. Some dependencies of the legacy
+    # desktop can still be useful to the user or other manually installed tools.
+    if ! plan_output="$(pacman -R --print --print-format '%n' "${INSTALLED_CLEANUP[@]}")"; then
         echo "ERROR: pacman could not calculate a safe removal transaction. No packages were removed." >&2
         exit 1
     fi
@@ -297,7 +297,7 @@ remove_legacy_packages() {
         return
     fi
 
-    pacman -Rns --noconfirm "${INSTALLED_CLEANUP[@]}"
+    pacman -R --noconfirm "${INSTALLED_CLEANUP[@]}"
     REMOVED_PACKAGES=("${REMOVAL_PLAN[@]}")
 }
 

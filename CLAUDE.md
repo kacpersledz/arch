@@ -177,7 +177,7 @@ Wintarch configures a two-tier swap system for optimal performance:
 - Fresh installs mark all existing migrations as completed
 - `wintarch-update` runs pending migrations after package updates
 - The Plasma login migration uses the shared fresh-install package baseline, requires a snapshot by default, and preserves COSMIC and SDDM packages while switching services to `plasmalogin.service`
-- The subsequent cleanup migration verifies the Plasma login stack, snapshots the system, and removes only `cosmic`, `cosmic-greeter`, `xdg-desktop-portal-cosmic`, and `win11-clipboard-history-bin`; it preserves user configuration and the SDDM package
+- The subsequent cleanup migration verifies the Plasma login stack, snapshots the system, and removes only the `cosmic`, `cosmic-greeter`, `xdg-desktop-portal-cosmic`, and `win11-clipboard-history-bin` targets without recursively removing dependencies; it preserves user configuration and the SDDM package
 - See [CONTRIBUTING.md](CONTRIBUTING.md#creating-migrations) for comprehensive migration guide
 
 ## Breaking Changes Philosophy
