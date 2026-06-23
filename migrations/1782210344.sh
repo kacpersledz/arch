@@ -29,7 +29,6 @@ KEY_PACKAGES=(
 )
 
 SNAPSHOT_CREATED=false
-SNAPSHOT_SKIPPED=false
 SDDM_INSTALLED=false
 COSMIC_PACKAGES_PRESERVED=false
 PLASMALOGIN_ENABLED=false
@@ -179,24 +178,13 @@ create_safety_snapshot() {
     fi
 
     if [[ -z "$snapshot_command" || ! -x "$snapshot_command" ]] || ! command -v snapper &>/dev/null || [[ "$config_count" -eq 0 ]]; then
-        if [[ "${WINTARCH_ALLOW_NO_SNAPSHOT:-0}" == "1" ]]; then
-            SNAPSHOT_SKIPPED=true
-            echo "WARNING: No usable Wintarch/Snapper snapshot configuration found."
-            echo "WARNING: Continuing only because WINTARCH_ALLOW_NO_SNAPSHOT=1."
-            return
-        fi
         echo "ERROR: A working wintarch-snapshot command and at least one Snapper configuration are required." >&2
-        echo "Fix snapshot support or explicitly retry with WINTARCH_ALLOW_NO_SNAPSHOT=1." >&2
+        echo "Fix snapshot support before retrying this migration." >&2
         exit 1
     fi
 
     echo "Creating safety snapshot..."
     if ! "$snapshot_command" create "pre Plasma login migration"; then
-        if [[ "${WINTARCH_ALLOW_NO_SNAPSHOT:-0}" == "1" ]]; then
-            SNAPSHOT_SKIPPED=true
-            echo "WARNING: Snapshot creation failed; continuing because WINTARCH_ALLOW_NO_SNAPSHOT=1."
-            return
-        fi
         echo "ERROR: Snapshot creation failed. No system changes were made." >&2
         exit 1
     fi
@@ -320,7 +308,6 @@ print_summary() {
     echo
     echo "=== Plasma Login Migration Summary ==="
     echo "  Snapshot created: $SNAPSHOT_CREATED"
-    echo "  Snapshot explicitly skipped: $SNAPSHOT_SKIPPED"
     echo "  Plasma packages already present: $(join_by_space "${ALREADY_INSTALLED[@]}")"
     echo "  Plasma packages installed: $(join_by_space "${PACKAGES_TO_INSTALL[@]}")"
     echo "  Display manager before migration: $CURRENT_DM ($CURRENT_ALIAS)"

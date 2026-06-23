@@ -97,7 +97,7 @@ The update process:
 4. Runs any new migrations
 5. Prompts for reboot if kernel updated
 
-The Plasma migration creates its own safety snapshot before installing the fresh-install Plasma baseline and switching the display-manager alias to `plasmalogin.service`. It does not restart the active display manager or remove COSMIC/SDDM packages. If snapshot support is unavailable, it stops unless the administrator explicitly sets `WINTARCH_ALLOW_NO_SNAPSHOT=1`.
+The Plasma migration requires and creates its own safety snapshot before installing the fresh-install Plasma baseline and switching the display-manager alias to `plasmalogin.service`. It stops before making changes if snapshot support is unavailable. It does not restart the active display manager or remove COSMIC/SDDM packages.
 
 ### Manage Snapshots
 ```bash

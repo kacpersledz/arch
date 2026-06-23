@@ -47,8 +47,6 @@ show_status() {
 }
 
 run_migrations() {
-    local -a migration_command
-
     sudo mkdir -p "$STATE_DIR" "$SKIPPED_DIR"
 
     for file in "$WINTARCH_PATH/migrations"/*.sh; do
@@ -62,13 +60,7 @@ run_migrations() {
 
         echo -e "\e[32mRunning migration: ${filename%.sh}\e[0m"
 
-        if [[ "${WINTARCH_ALLOW_NO_SNAPSHOT:-0}" == "1" ]]; then
-            migration_command=(sudo WINTARCH_ALLOW_NO_SNAPSHOT=1 bash "$file")
-        else
-            migration_command=(sudo bash "$file")
-        fi
-
-        if "${migration_command[@]}"; then
+        if sudo bash "$file"; then
             sudo touch "$STATE_DIR/$filename"
             echo -e "\e[32mMigration completed: ${filename%.sh}\e[0m"
         else
