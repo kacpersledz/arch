@@ -2,7 +2,7 @@
 
 Technical documentation for developing and maintaining Wintarch.
 
-Wintarch is the product identity. Fresh installations use KDE Plasma, but desktop branding must remain separate from product branding. Existing COSMIC-based installs will be migrated in a separate migration PR. The `vendor/` trees are reference-only and are not part of runtime.
+Wintarch is the product identity. Fresh installations use KDE Plasma with `plasma-login-manager`, but desktop branding remains separate from product branding. Existing installations converge on the same stack through `wintarch-update` / `wintarch-migrations`; the migration switches COSMIC Greeter or SDDM to `plasmalogin.service` while retaining their packages for rollback. Legacy COSMIC cleanup is a separate step. The `vendor/` trees are reference-only and are not part of runtime.
 
 ## Project Status
 
@@ -101,7 +101,7 @@ User created during archinstall with groups:
 
 Base packages via archinstall JSON:
 - base-devel, git, curl, less, vim, networkmanager
-- snapper, limine, Arch package groups: plasma, kde-utilities
+- snapper, limine, Arch package groups from the shared `install/packages/plasma.txt` baseline: plasma, kde-utilities
 - Plasma Login Manager (provided by the plasma group and enabled explicitly)
 - xdg-desktop-portal, xdg-desktop-portal-kde, power-profiles-daemon
 - firefox, zsh, bluez, bluez-utils
@@ -183,6 +183,7 @@ Wintarch configures a two-tier swap system for optimal performance:
 - Filename format: Unix timestamp (e.g., `1704067200.sh`)
 - Fresh installs mark all existing migrations as completed
 - `wintarch-update` runs pending migrations after package updates
+- The Plasma login migration uses the shared fresh-install package baseline, requires a snapshot by default, and preserves COSMIC and SDDM packages while switching services to `plasmalogin.service`
 - See [CONTRIBUTING.md](CONTRIBUTING.md#creating-migrations) for comprehensive migration guide
 
 ## Breaking Changes Philosophy

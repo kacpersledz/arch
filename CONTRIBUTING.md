@@ -31,7 +31,7 @@ Wintarch is a wrapper around archinstall that adds:
 - Post-install configuration (Limine, Snapper, KDE Plasma for fresh installations, Wintarch tools)
 - Migration system for managing updates to installed systems
 
-Existing COSMIC-based installs are intentionally unchanged here and will be migrated in a separate migration PR.
+Existing installations use the standard migration runner to converge on Plasma with `plasma-login-manager`. The migration recognizes COSMIC Greeter and SDDM, disables their services, enables `plasmalogin.service`, and retains both COSMIC and SDDM packages for rollback. Removing the legacy COSMIC stack is a separate change.
 
 See [CLAUDE.md](CLAUDE.md) for detailed architecture and file structure.
 
@@ -388,7 +388,7 @@ Files in `install/` control the installation process:
 
 ### Adding Packages
 
-**For new installations**: Add to `install/archinstall.sh` (base packages) or `install/post-install.sh` (AUR packages)
+**For new installations**: Add general base packages to `install/archinstall.sh`, Plasma/KDE baseline packages to `install/packages/plasma.txt`, or AUR packages to `install/post-install.sh`. The shared Plasma list is also consumed by the existing-system migration.
 
 **For existing installations**: Create migration that checks/installs package
 

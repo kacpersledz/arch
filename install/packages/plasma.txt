@@ -1,0 +1,13 @@
+# Shared Plasma/KDE baseline for fresh installations and system migrations.
+# Keep one package or package group per line.
+plasma
+kde-utilities
+xdg-desktop-portal
+xdg-desktop-portal-kde
+plasma-workspace-wallpapers
+dolphin
+gwenview
+okular
+unrar
+7zip
+power-profiles-daemon
