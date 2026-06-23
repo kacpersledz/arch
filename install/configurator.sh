@@ -152,7 +152,7 @@ run_configurator() {
     show_logo
 
     gum style --foreground 5 --padding "0 0 1 $PADDING_LEFT" \
-        "Welcome to Arch Linux Installer (COSMIC Edition)"
+        "Welcome to the Wintarch Installer"
 
     echo
 

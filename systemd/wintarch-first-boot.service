@@ -1,6 +1,7 @@
 [Unit]
 Description=Wintarch First Boot Configuration
 After=local-fs.target dbus.service
+# Keep first-boot configuration ahead of the currently supported display manager.
 Before=cosmic-greeter.service display-manager.service
 ConditionPathExists=!/var/lib/wintarch/first-boot-done
 

@@ -68,7 +68,7 @@ LOGO='
   ███    ███   ███    ███ ███    ███   ███    ███
   ███    █▀    ███    ███ ████████▀    ███    █▀
                ███    ███
-                    COSMIC Edition
+                       Wintarch
 '
 
 show_logo() {
@@ -84,7 +84,7 @@ clear_screen() {
 start_log() {
     touch "$LOG_FILE"
     chmod 666 "$LOG_FILE"
-    echo "=== Arch COSMIC Installation Started: $(date) ===" >> "$LOG_FILE"
+    echo "=== Wintarch Installation Started: $(date) ===" >> "$LOG_FILE"
 }
 
 log() {

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Arch Linux Installer (COSMIC Edition)
+# Wintarch Installer
 # Dual-boot capable with LUKS encryption and BTRFS snapshots
 #
 # Usage: Run from Arch Linux live environment
@@ -10,7 +10,7 @@ set -eEuo pipefail
 # Installation paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MOUNT_POINT="/mnt/archinstall"
-LOG_FILE="/var/log/arch-cosmic-install.log"
+LOG_FILE="/var/log/wintarch-install.log"
 
 # Source libraries
 source "$SCRIPT_DIR/helpers.sh"

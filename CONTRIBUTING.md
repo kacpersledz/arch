@@ -28,7 +28,7 @@ cd arch
 Wintarch is a wrapper around archinstall that adds:
 - TUI configurator for user input (keyboard, disk, etc.)
 - BTRFS + LUKS partitioning with dual-boot support
-- Post-install configuration (Limine, Snapper, COSMIC, wintarch tools)
+- Post-install configuration (Limine, Snapper, the current COSMIC desktop, Wintarch tools)
 - Migration system for managing updates to installed systems
 
 See [CLAUDE.md](CLAUDE.md) for detailed architecture and file structure.
@@ -561,7 +561,7 @@ arch/
 ├── install/               # Installer scripts
 ├── migrations/            # System migrations
 ├── test/                  # Test scripts
-└── vendor/                # Reference implementations
+└── vendor/                # Reference implementations (not runtime dependencies)
 ```
 
 ## Getting Help

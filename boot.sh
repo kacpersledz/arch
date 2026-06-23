@@ -20,7 +20,7 @@ logo='
   ░   ░   ▒ ░   ░   ░ ░   ░        ░   ▒     ░░   ░ ░         ░  ░░ ░
     ░     ░           ░                ░  ░   ░     ░ ░       ░  ░  ░
                                                     ░
-              Arch Linux COSMIC Edition Installer
+                       Wintarch Installer
 '
 
 clear

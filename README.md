@@ -1,8 +1,8 @@
 # Wintarch
 
-An opinionated Arch Linux distribution featuring the COSMIC desktop environment, BTRFS snapshots, and simple system management.
+Wintarch is an opinionated Arch Linux system with its own defaults, BTRFS snapshots, and simple system management.
 
-Inspired by [Omarchy](https://github.com/basecamp/omarchy), but with COSMIC instead of Hyprland and dual-boot support.
+The current desktop implementation uses COSMIC. The project is inspired by [Omarchy](https://github.com/basecamp/omarchy), which is retained only as a development reference and is not a runtime dependency.
 
 ## Features
 
