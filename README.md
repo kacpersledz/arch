@@ -18,6 +18,7 @@ Fresh Wintarch installations use KDE Plasma with `plasma-login-manager`. Existin
 
 ### Desktop & System
 - KDE Plasma desktop + Plasma Login Manager
+- Plasma's native clipboard manager
 - PipeWire audio
 - NetworkManager
 - Bluetooth (bluez + bluez-utils, service enabled)
@@ -98,6 +99,8 @@ The update process:
 5. Prompts for reboot if kernel updated
 
 The Plasma migration requires and creates its own safety snapshot before installing the fresh-install Plasma baseline and switching the display-manager alias to `plasmalogin.service`. It stops before making changes if snapshot support is unavailable. It does not restart the active display manager or remove COSMIC/SDDM packages.
+
+A subsequent legacy-runtime cleanup migration removes only the explicitly approved `cosmic`, `cosmic-greeter`, `xdg-desktop-portal-cosmic`, and `win11-clipboard-history-bin` targets after verifying the Plasma login stack. It does not recursively remove their dependencies. Plasma provides its own clipboard manager, so `win11-clipboard-history-bin` is no longer installed. The cleanup preserves `~/.config/cosmic`, legacy clipboard-manager user configuration, and the SDDM package. It requires a working Snapper snapshot and stops before changes if one cannot be created. Rollback uses the pre-cleanup snapshot or manual package reinstallation.
 
 ### Manage Snapshots
 ```bash

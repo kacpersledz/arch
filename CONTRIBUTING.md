@@ -31,7 +31,7 @@ Wintarch is a wrapper around archinstall that adds:
 - Post-install configuration (Limine, Snapper, KDE Plasma for fresh installations, Wintarch tools)
 - Migration system for managing updates to installed systems
 
-Existing installations use the standard migration runner to converge on Plasma with `plasma-login-manager`. The migration recognizes COSMIC Greeter and SDDM, disables their services, enables `plasmalogin.service`, and retains both COSMIC and SDDM packages for rollback. Removing the legacy COSMIC stack is a separate change.
+Existing installations use the standard migration runner to converge on Plasma with `plasma-login-manager`. The Plasma migration recognizes COSMIC Greeter and SDDM, disables their services, and enables `plasmalogin.service`. A separate cleanup migration then removes only the explicitly listed COSMIC runtime targets and `win11-clipboard-history-bin`, without recursively removing dependencies, because Plasma provides its own clipboard manager. It preserves `~/.config/cosmic`, clipboard-manager user configuration, and the SDDM package. Rollback uses the pre-cleanup Snapper snapshot or manual package reinstallation.
 
 See [CLAUDE.md](CLAUDE.md) for detailed architecture and file structure.
 
