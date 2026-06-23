@@ -2,11 +2,11 @@
 
 Wintarch is an opinionated Arch Linux system with its own defaults, BTRFS snapshots, and simple system management.
 
-The current desktop implementation uses COSMIC. The project is inspired by [Omarchy](https://github.com/basecamp/omarchy), which is retained only as a development reference and is not a runtime dependency.
+Fresh Wintarch installations use KDE Plasma. The project is inspired by [Omarchy](https://github.com/basecamp/omarchy), which is retained only as a development reference and is not a runtime dependency. Existing COSMIC-based installs will be migrated in a separate migration PR.
 
 ## Features
 
-- **COSMIC Desktop** - System76's modern, Rust-based desktop environment
+- **KDE Plasma Desktop** - Plasma with Plasma Login Manager and the KDE desktop portal
 - **BTRFS with Snapshots** - Automatic snapshots before updates, bootable rollback via Limine
 - **LUKS Encryption** - Full disk encryption (mandatory)
 - **Dual-Boot Friendly** - Preserve Windows, use free space, or existing partitions
@@ -17,7 +17,7 @@ The current desktop implementation uses COSMIC. The project is inspired by [Omar
 ## What's Included
 
 ### Desktop & System
-- COSMIC desktop + greeter
+- KDE Plasma desktop + Plasma Login Manager
 - PipeWire audio
 - NetworkManager
 - Bluetooth (bluez + bluez-utils, service enabled)
@@ -147,7 +147,7 @@ The system uses zram first for speed, then falls back to the swapfile when neede
 
 | Aspect | Omarchy | Wintarch |
 |--------|---------|----------|
-| Desktop | Hyprland | COSMIC |
+| Desktop | Hyprland | KDE Plasma |
 | Disk mode | Wipe only | Dual-boot support |
 | Auto-login | Yes | No (multi-user) |
 | Target | Single user | General purpose |

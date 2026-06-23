@@ -70,6 +70,21 @@ setup_shell() {
     echo "Shell changed to zsh (will take effect on next login)"
 }
 
+# Keep legacy COSMIC configuration available for existing installations while
+# avoiding desktop-specific setup on fresh KDE-only installations.
+run_cosmic_config_if_available() {
+    local action="$1"
+
+    if command -v cosmic-session &>/dev/null ||
+       command -v cosmic-panel &>/dev/null ||
+       command -v cosmic-greeter &>/dev/null ||
+       [[ -d "$HOME/.config/cosmic" ]]; then
+        "$WINTARCH_PATH/user/scripts/cosmic.sh" "$action"
+    else
+        echo "COSMIC desktop not detected, skipping legacy configuration"
+    fi
+}
+
 # Mark setup as complete
 mark_setup_done() {
     mkdir -p "$STATE_DIR"
@@ -101,8 +116,8 @@ run_setup() {
     # Change shell to zsh
     setup_shell
 
-    # Configure COSMIC desktop (dock favorites, default browser)
-    "$WINTARCH_PATH/user/scripts/cosmic.sh" setup
+    # Configure legacy COSMIC installations only; Plasma setup is a later PR.
+    run_cosmic_config_if_available setup
 
     # Mark all existing migrations as done (fresh setup = latest state)
     "$WINTARCH_PATH/user/scripts/migrations.sh" mark-done
@@ -126,8 +141,8 @@ run_update() {
     # Update Claude Code
     "$WINTARCH_PATH/user/scripts/claude-code.sh" update
 
-    # Update COSMIC desktop configuration
-    "$WINTARCH_PATH/user/scripts/cosmic.sh" update
+    # Update legacy COSMIC desktop configuration when COSMIC is present.
+    run_cosmic_config_if_available update
 
     # Run pending user migrations
     "$WINTARCH_PATH/user/scripts/migrations.sh" run

@@ -6,7 +6,7 @@
 # - mkinitcpio with proper hooks for LUKS + BTRFS
 # - Limine bootloader with snapshot support
 # - Snapper for BTRFS snapshots
-# - COSMIC desktop greeter
+# - Plasma Login Manager
 # - Wintarch system management
 
 # --- CHROOT HELPER ---
@@ -532,7 +532,7 @@ configure_services() {
 
     chroot_run "
         systemctl enable NetworkManager.service
-        systemctl enable cosmic-greeter.service
+        systemctl enable plasmalogin.service
         systemctl enable power-profiles-daemon.service 2>/dev/null || true
         systemctl enable bluetooth.service
     " 2>&1 | tee -a "$LOG_FILE" >&2
