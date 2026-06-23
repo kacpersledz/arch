@@ -4,6 +4,17 @@
 
 # --- JSON GENERATION ---
 
+plasma_packages_json() {
+    local package_file="$SCRIPT_DIR/packages/plasma.txt"
+
+    [[ -f "$package_file" ]] || die "Missing Plasma package baseline: $package_file"
+
+    while IFS= read -r package; do
+        [[ -n "$package" && "$package" != \#* ]] || continue
+        printf '        "%s",\n' "$package"
+    done < "$package_file"
+}
+
 generate_user_config() {
     local config_file="$1"
 
@@ -52,17 +63,7 @@ generate_user_config() {
         "networkmanager",
         "snapper",
         "limine",
-        "plasma",
-        "kde-utilities",
-        "xdg-desktop-portal",
-        "xdg-desktop-portal-kde",
-        "plasma-workspace-wallpapers",
-        "dolphin",
-        "gwenview",
-        "okular",
-        "unrar",
-        "7zip",
-        "power-profiles-daemon",
+$(plasma_packages_json)
         "firefox",
         "zsh",
         "bluez",

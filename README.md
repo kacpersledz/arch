@@ -2,7 +2,7 @@
 
 Wintarch is an opinionated Arch Linux system with its own defaults, BTRFS snapshots, and simple system management.
 
-Fresh Wintarch installations use KDE Plasma. The project is inspired by [Omarchy](https://github.com/basecamp/omarchy), which is retained only as a development reference and is not a runtime dependency. Existing COSMIC-based installs will be migrated in a separate migration PR.
+Fresh Wintarch installations use KDE Plasma with `plasma-login-manager`. Existing installations are migrated to the same login stack through the standard `wintarch-update` / `wintarch-migrations` flow. The migration can switch from COSMIC Greeter or SDDM to `plasmalogin.service`; COSMIC and SDDM packages remain installed for rollback until a separate legacy-cleanup step. The project is inspired by [Omarchy](https://github.com/basecamp/omarchy), which is retained only as a development reference and is not a runtime dependency.
 
 ## Features
 
@@ -96,6 +96,8 @@ The update process:
 3. Updates system packages (pacman + yay)
 4. Runs any new migrations
 5. Prompts for reboot if kernel updated
+
+The Plasma migration creates its own safety snapshot before installing the fresh-install Plasma baseline and switching the display-manager alias to `plasmalogin.service`. It does not restart the active display manager or remove COSMIC/SDDM packages. If snapshot support is unavailable, it stops unless the administrator explicitly sets `WINTARCH_ALLOW_NO_SNAPSHOT=1`.
 
 ### Manage Snapshots
 ```bash
