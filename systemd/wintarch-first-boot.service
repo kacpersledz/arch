@@ -1,8 +1,8 @@
 [Unit]
 Description=Wintarch First Boot Configuration
 After=local-fs.target dbus.service
-# Keep first-boot configuration ahead of SDDM and the generic display manager alias.
-Before=sddm.service display-manager.service
+# Keep first-boot configuration ahead of Plasma Login Manager and its generic alias.
+Before=plasmalogin.service display-manager.service
 ConditionPathExists=!/var/lib/wintarch/first-boot-done
 
 [Service]

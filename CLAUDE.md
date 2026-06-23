@@ -101,7 +101,7 @@ User created during archinstall with groups:
 
 Base packages via archinstall JSON:
 - base-devel, git, curl, less, vim, networkmanager
-- snapper, limine, KDE Plasma, SDDM
+- snapper, limine, KDE Plasma, Plasma Login Manager
 - xdg-desktop-portal, xdg-desktop-portal-kde, power-profiles-daemon
 - firefox, zsh, bluez, bluez-utils
 
@@ -115,7 +115,7 @@ AUR packages via yay (install/post-install.sh):
 ### Services Enabled
 
 - NetworkManager.service
-- sddm.service
+- plasmalogin.service
 - power-profiles-daemon.service
 - bluetooth.service
 - limine-snapper-sync.service

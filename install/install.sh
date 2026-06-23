@@ -39,7 +39,7 @@ main() {
     # Step 3: Run archinstall with pre-mounted config
     run_archinstall
 
-    # Step 4: Post-installation setup (limine-snapper, COSMIC)
+    # Step 4: Post-installation setup (Limine, Snapper, KDE Plasma)
     run_post_install
 
     # Done!
@@ -87,7 +87,7 @@ show_completion() {
         "Installation Complete!"
 
     echo
-    gum style "Your system is ready. Please reboot to start using COSMIC."
+    gum style "Your system is ready. Please reboot to start using KDE Plasma."
     echo
     gum style "Credentials:"
     gum style "  Username: $USERNAME"

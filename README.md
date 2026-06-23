@@ -6,7 +6,7 @@ Fresh Wintarch installations use KDE Plasma. The project is inspired by [Omarchy
 
 ## Features
 
-- **KDE Plasma Desktop** - Plasma with SDDM and the KDE desktop portal
+- **KDE Plasma Desktop** - Plasma with Plasma Login Manager and the KDE desktop portal
 - **BTRFS with Snapshots** - Automatic snapshots before updates, bootable rollback via Limine
 - **LUKS Encryption** - Full disk encryption (mandatory)
 - **Dual-Boot Friendly** - Preserve Windows, use free space, or existing partitions
@@ -17,7 +17,7 @@ Fresh Wintarch installations use KDE Plasma. The project is inspired by [Omarchy
 ## What's Included
 
 ### Desktop & System
-- KDE Plasma desktop + SDDM
+- KDE Plasma desktop + Plasma Login Manager
 - PipeWire audio
 - NetworkManager
 - Bluetooth (bluez + bluez-utils, service enabled)
