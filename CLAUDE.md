@@ -101,7 +101,8 @@ User created during archinstall with groups:
 
 Base packages via archinstall JSON:
 - base-devel, git, curl, less, vim, networkmanager
-- snapper, limine, KDE Plasma, Plasma Login Manager
+- snapper, limine, Arch package groups: plasma, kde-utilities
+- Plasma Login Manager (provided by the plasma group and enabled explicitly)
 - xdg-desktop-portal, xdg-desktop-portal-kde, power-profiles-daemon
 - firefox, zsh, bluez, bluez-utils
 
