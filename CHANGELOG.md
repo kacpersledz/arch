@@ -7,6 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-06-23
+
+### Added
+
+-   **Plasma Baseline for Fresh Installs:** New installations now use KDE Plasma instead of the legacy COSMIC desktop stack.
+    -   Added a shared Plasma package baseline in `install/packages/plasma.txt`
+    -   Fresh installs now include Plasma, KDE utilities, Dolphin, Gwenview, Okular, and KDE portal integration
+    -   `plasmalogin.service` is enabled as the default display manager on fresh systems
+
+-   **Existing Install Migration to Plasma Login:** Added a system migration for moving existing Wintarch systems onto the Plasma login stack.
+    -   Migration `1782210344` installs the Plasma baseline on existing systems
+    -   Detects and disables existing display managers such as COSMIC Greeter or SDDM before enabling Plasma Login Manager
+    -   Creates a safety snapshot before changing the active desktop login stack
+    -   Preserves COSMIC and SDDM packages during the login-manager transition to keep rollback simple
+
+-   **Legacy Desktop Cleanup Migration:** Added a follow-up migration for removing the old desktop runtime after Plasma is active.
+    -   Migration `1782213831` removes explicitly approved legacy COSMIC runtime packages
+    -   Removes `win11-clipboard-history-bin` from migrated systems as part of legacy desktop cleanup
+    -   Verifies Plasma prerequisites before package removal
+    -   Preserves `~/.config/cosmic`, legacy clipboard user configuration, and the `sddm` package
+
+### Changed
+
+-   **Desktop Strategy:** Wintarch now targets KDE Plasma as the primary desktop environment for fresh installations and converges existing systems through migrations.
+    -   The first-boot unit now orders itself before `plasmalogin.service`
+    -   User setup skips legacy COSMIC-specific configuration when COSMIC is not present
+    -   New installs no longer add users to the `input` group by default
+
+-   **Installer Branding:** Installer-generated system branding now consistently uses Wintarch naming.
+    -   Renamed mkinitcpio config from `arch-cosmic.conf` to `wintarch.conf`
+    -   Updated Limine branding and UKI naming from Arch COSMIC-specific values to Wintarch values
+    -   Temporary installer workspace now uses `/tmp/wintarch-install`
+
+-   **Repository References:** Updated cloned repository and project references to use the current GitHub owner.
+
+### Fixed
+
+-   **Limine-Snapper Installation Reliability:** Hardened installation of `limine-snapper-sync` and `limine-mkinitcpio-hook`.
+    -   Installer now fails fast when the normal package installation path does not succeed
+    -   Added an exact-version CachyOS binary fallback after repo/AUR install failures
+    -   Service enablement failures for `limine-snapper-sync.service` are now treated as installer errors instead of being silently ignored
+
 ## [0.5.0] - 2026-01-28
 
 ### Added
@@ -176,7 +218,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   **Git Pager:** Prevented `wintarch-update` from failing on minimal systems by setting `GIT_PAGER=cat`.
 -   **Git Ownership:** Fixed "dubious ownership" errors from `git` by adding `/opt/wintarch` to the system's `safe.directory` list during installation.
 
-[unreleased]: https://github.com/kacpersledz/arch/compare/v0.5.0...HEAD
+[unreleased]: https://github.com/kacpersledz/arch/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/kacpersledz/arch/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/kacpersledz/arch/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/kacpersledz/arch/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/kacpersledz/arch/compare/v0.3.1...v0.3.2
