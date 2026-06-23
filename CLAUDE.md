@@ -2,7 +2,7 @@
 
 Technical documentation for developing and maintaining Wintarch.
 
-Wintarch is the product identity. The current desktop implementation uses COSMIC, but desktop branding must remain separate from product branding. The `vendor/` trees are reference-only and are not part of runtime.
+Wintarch is the product identity. Fresh installations use KDE Plasma, but desktop branding must remain separate from product branding. Existing COSMIC-based installs will be migrated in a separate migration PR. The `vendor/` trees are reference-only and are not part of runtime.
 
 ## Project Status
 
@@ -101,8 +101,8 @@ User created during archinstall with groups:
 
 Base packages via archinstall JSON:
 - base-devel, git, curl, less, vim, networkmanager
-- snapper, limine, cosmic, cosmic-greeter
-- xdg-desktop-portal-cosmic, power-profiles-daemon
+- snapper, limine, KDE Plasma, SDDM
+- xdg-desktop-portal, xdg-desktop-portal-kde, power-profiles-daemon
 - firefox, zsh, bluez, bluez-utils
 
 Post-install packages (install/post-install.sh):
@@ -115,7 +115,7 @@ AUR packages via yay (install/post-install.sh):
 ### Services Enabled
 
 - NetworkManager.service
-- cosmic-greeter.service
+- sddm.service
 - power-profiles-daemon.service
 - bluetooth.service
 - limine-snapper-sync.service
