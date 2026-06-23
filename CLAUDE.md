@@ -2,7 +2,7 @@
 
 Technical documentation for developing and maintaining Wintarch.
 
-Wintarch is the product identity. Fresh installations use KDE Plasma with `plasma-login-manager`, but desktop branding remains separate from product branding. Existing installations converge on the same stack through `wintarch-update` / `wintarch-migrations`; the migration switches COSMIC Greeter or SDDM to `plasmalogin.service` while retaining their packages for rollback. Legacy COSMIC cleanup is a separate step. The `vendor/` trees are reference-only and are not part of runtime.
+Wintarch is the product identity. Fresh installations use KDE Plasma with `plasma-login-manager`, but desktop branding remains separate from product branding. Existing installations converge on the same stack through `wintarch-update` / `wintarch-migrations`; the Plasma migration switches COSMIC Greeter or SDDM to `plasmalogin.service`, then a guarded cleanup removes explicitly listed COSMIC runtime packages. The `vendor/` trees are reference-only and are not part of runtime.
 
 ## Project Status
 
@@ -52,8 +52,8 @@ When adding features or documentation, remember this distinction:
 │  4. POST-INSTALL (chroot)                                       │
 │     - mkinitcpio with encrypt + btrfs-overlayfs hooks           │
 │     - Limine bootloader configuration                           │
-│     - Snapper, AUR packages (brave, vscode, clipboard-manager)  │
-│     - Clipboard manager setup (uinput, input group)             │
+│     - Snapper, AUR packages (brave, vscode)                     │
+│     - Plasma native clipboard manager                           │
 │     - Swap setup (zram + RAM-sized swapfile)                    │
 │     - Wintarch setup (/opt/wintarch/, symlinks, state)          │
 └─────────────────────────────────────────────────────────────────┘
@@ -95,7 +95,6 @@ arch/
 
 User created during archinstall with groups:
 - `wheel` - sudo access
-- `input` - access to input devices (required for clipboard manager)
 
 ### Packages (install/archinstall.sh)
 
@@ -111,7 +110,7 @@ Post-install packages (install/post-install.sh):
 
 AUR packages via yay (install/post-install.sh):
 - limine-snapper-sync, limine-mkinitcpio-hook
-- brave-bin, visual-studio-code-bin, win11-clipboard-history-bin
+- brave-bin, visual-studio-code-bin
 
 ### Services Enabled
 
@@ -134,15 +133,9 @@ We disable mkinitcpio hooks during post-install to avoid multiple rebuilds:
 - `install/post-install.sh:enable_mkinitcpio_hooks()` - re-enables at the end
 - Single `mkinitcpio -P` at the end
 
-### Clipboard Manager Setup
+### Clipboard Management
 
-The Windows 11-style clipboard manager (win11-clipboard-history-bin) requires access to `/dev/uinput` for paste simulation:
-
-**Requirements:**
-- User in `input` group (configured in archinstall user creation)
-- `uinput` kernel module loaded at boot via `/etc/modules-load.d/uinput.conf` (configured in post-install)
-
-This allows the clipboard manager to simulate keyboard input for paste operations without requiring root access.
+Plasma provides the clipboard manager. Fresh installations do not install `win11-clipboard-history-bin`, add users to the `input` group for it, or configure `uinput` for it. The legacy-runtime migration removes the package from existing systems without deleting its user configuration.
 
 ### Swap Configuration
 
@@ -184,6 +177,7 @@ Wintarch configures a two-tier swap system for optimal performance:
 - Fresh installs mark all existing migrations as completed
 - `wintarch-update` runs pending migrations after package updates
 - The Plasma login migration uses the shared fresh-install package baseline, requires a snapshot by default, and preserves COSMIC and SDDM packages while switching services to `plasmalogin.service`
+- The subsequent cleanup migration verifies the Plasma login stack, snapshots the system, and removes only `cosmic`, `cosmic-greeter`, `xdg-desktop-portal-cosmic`, and `win11-clipboard-history-bin`; it preserves user configuration and the SDDM package
 - See [CONTRIBUTING.md](CONTRIBUTING.md#creating-migrations) for comprehensive migration guide
 
 ## Breaking Changes Philosophy

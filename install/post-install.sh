@@ -382,7 +382,7 @@ install_limine_snapper_packages() {
 }
 
 install_aur_packages() {
-    log_info "Installing AUR packages (brave, vscode, clipboard-manager)..."
+    log_info "Installing AUR packages (brave, vscode)..."
     echo >&2
 
     # Ensure yay is available
@@ -396,7 +396,7 @@ install_aur_packages() {
     chroot_run "
         echo '$USERNAME ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/temp-build
         chmod 440 /etc/sudoers.d/temp-build
-        sudo -u '$USERNAME' yay -S --noconfirm --needed brave-bin visual-studio-code-bin win11-clipboard-history-bin
+        sudo -u '$USERNAME' yay -S --noconfirm --needed brave-bin visual-studio-code-bin
         rm -f /etc/sudoers.d/temp-build
     " 2>&1 | tee -a "$LOG_FILE" >&2 || {
         log_warn "Failed to install some AUR packages"
@@ -405,23 +405,6 @@ install_aur_packages() {
 
     log_success "AUR packages installed"
     return 0
-}
-
-# --- CLIPBOARD MANAGER SETUP ---
-
-configure_clipboard_manager() {
-    log_info "Configuring clipboard manager (uinput module)..."
-    echo >&2
-
-    # Configure uinput module to load at boot
-    # Note: User is already in 'input' group from archinstall user creation
-    echo "Configuring uinput module to load at boot..." >&2
-    chroot_run "cat > /etc/modules-load.d/uinput.conf << 'EOF'
-# Load uinput module for clipboard manager
-uinput
-EOF" 2>&1 | tee -a "$LOG_FILE" >&2
-
-    log_success "Clipboard manager configured"
 }
 
 # --- SWAP CONFIGURATION ---
@@ -659,11 +642,8 @@ run_post_install() {
     # Install snapshot boot integration
     install_limine_snapper_packages
 
-    # Install user AUR packages (brave, vscode, clipboard-manager)
+    # Install user AUR packages (brave, vscode)
     install_aur_packages || true
-
-    # Configure clipboard manager requirements (uinput, input group)
-    configure_clipboard_manager
 
     # Setup swap (zram + swapfile)
     setup_swap
