@@ -2,6 +2,8 @@
 
 Technical documentation for developing and maintaining Wintarch.
 
+Wintarch is the product identity. The current desktop implementation uses COSMIC, but desktop branding must remain separate from product branding. The `vendor/` trees are reference-only and are not part of runtime.
+
 ## Project Status
 
 - **Phase 1: Installer** - Complete
@@ -84,7 +86,7 @@ arch/
 ├── migrations/            # Wintarch migrations (timestamp-named .sh files)
 ├── version                # Wintarch version (e.g., v0.1.0)
 ├── test/                  # Test scripts
-└── vendor/                # Vendored dependencies (omarchy reference)
+└── vendor/                # Reference implementations (not runtime dependencies)
 ```
 
 ## Key Implementation Details

@@ -1,5 +1,5 @@
 #!/bin/bash
-# test.sh - Simple QEMU test for Arch COSMIC installer
+# test.sh - Simple QEMU test for the Wintarch installer
 #
 # Prerequisites:
 #   - qemu-system-x86_64
@@ -145,7 +145,7 @@ boot_iso() {
         -device virtio-vga-gl \
         -display gtk,gl=on \
         -monitor stdio \
-        -name "Arch COSMIC Installer Test"
+        -name "Wintarch Installer Test"
 }
 
 # Boot from installed disk
@@ -172,7 +172,7 @@ boot_disk() {
         -device virtio-vga-gl \
         -display gtk,gl=on \
         -monitor stdio \
-        -name "Arch COSMIC Test"
+        -name "Wintarch Test"
 }
 
 # Clean up test files
@@ -186,7 +186,7 @@ clean() {
 # Show help
 show_help() {
     cat <<EOF
-Arch COSMIC Installer - QEMU Test Script
+Wintarch Installer - QEMU Test Script
 
 Usage:
   ./test.sh              Create disk and boot from ISO (installation mode)

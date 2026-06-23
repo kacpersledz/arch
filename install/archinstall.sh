@@ -141,7 +141,7 @@ run_archinstall() {
     log_step "Running Archinstall"
 
     # Create temp directory for config files
-    local config_dir="/tmp/arch-cosmic-install"
+    local config_dir="/tmp/wintarch-install"
     mkdir -p "$config_dir"
 
     # Generate config files

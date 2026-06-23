@@ -62,8 +62,8 @@ configure_mkinitcpio() {
 
     # Create hook configuration for LUKS + BTRFS
     # Note: btrfs-overlayfs is added later if limine-mkinitcpio-hook is installed
-    chroot_run "cat > /etc/mkinitcpio.conf.d/arch-cosmic.conf << 'EOF'
-# Arch COSMIC Installer - mkinitcpio configuration
+    chroot_run "cat > /etc/mkinitcpio.conf.d/wintarch.conf << 'EOF'
+# Wintarch mkinitcpio configuration
 # Hooks for LUKS encrypted BTRFS root
 HOOKS=(base udev keyboard autodetect microcode modconf kms keymap consolefont block encrypt filesystems fsck)
 EOF" 2>&1 | tee -a "$LOG_FILE" >&2
@@ -86,14 +86,14 @@ configure_limine() {
     # Create /etc/default/limine configuration
     echo "Creating /etc/default/limine..." >&2
     chroot_run "cat > /etc/default/limine << EOF
-TARGET_OS_NAME=\"Arch Linux COSMIC\"
+TARGET_OS_NAME=\"Wintarch\"
 
 ESP_PATH=\"/boot\"
 
 KERNEL_CMDLINE[default]=\"$cmdline\"
 
 ENABLE_UKI=yes
-CUSTOM_UKI_NAME=\"archcosmic\"
+CUSTOM_UKI_NAME=\"wintarch\"
 
 ENABLE_LIMINE_FALLBACK=yes
 
@@ -110,10 +110,10 @@ EOF" 2>&1 | tee -a "$LOG_FILE" >&2
     # Create base limine.conf
     echo "Creating /boot/limine.conf..." >&2
     chroot_run "cat > /boot/limine.conf << 'EOF'
-### Arch Linux COSMIC - Limine Configuration
+### Wintarch - Limine Configuration
 timeout: 5
 default_entry: 2
-interface_branding: Arch Linux COSMIC
+interface_branding: Wintarch
 interface_branding_color: 2
 hash_mismatch_panic: no
 
@@ -366,7 +366,7 @@ install_limine_snapper_packages() {
     echo "Updating mkinitcpio hooks for btrfs-overlayfs..." >&2
     chroot_run "
         if [ -f /usr/lib/initcpio/install/btrfs-overlayfs ]; then
-            sed -i 's/^HOOKS=.*/HOOKS=(base udev keyboard autodetect microcode modconf kms keymap consolefont block encrypt filesystems fsck btrfs-overlayfs)/' /etc/mkinitcpio.conf.d/arch-cosmic.conf
+            sed -i 's/^HOOKS=.*/HOOKS=(base udev keyboard autodetect microcode modconf kms keymap consolefont block encrypt filesystems fsck btrfs-overlayfs)/' /etc/mkinitcpio.conf.d/wintarch.conf
         fi
     " 2>&1 | tee -a "$LOG_FILE" >&2
 
