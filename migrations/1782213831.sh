@@ -54,7 +54,6 @@ PROTECTED_PACKAGES=(
 )
 
 SNAPSHOT_CREATED=false
-SNAPSHOT_SKIPPED=false
 PLASMA_PREFLIGHT_PASSED=false
 COSMIC_GREETER_DISABLED=false
 PLASMALOGIN_ENABLED=false
@@ -236,24 +235,13 @@ create_safety_snapshot() {
     fi
 
     if [[ -z "$snapshot_command" || ! -x "$snapshot_command" ]] || ! command -v snapper &>/dev/null || [[ "$config_count" -eq 0 ]]; then
-        if [[ "${WINTARCH_ALLOW_NO_SNAPSHOT:-0}" == "1" ]]; then
-            SNAPSHOT_SKIPPED=true
-            echo "WARNING: Snapshot support is unavailable."
-            echo "WARNING: Continuing only because WINTARCH_ALLOW_NO_SNAPSHOT=1."
-            return
-        fi
         echo "ERROR: A working wintarch-snapshot command and at least one Snapper configuration are required." >&2
-        echo "Fix snapshot support or explicitly retry with WINTARCH_ALLOW_NO_SNAPSHOT=1." >&2
+        echo "Fix snapshot support before retrying this migration." >&2
         exit 1
     fi
 
     echo "Creating safety snapshot..."
     if ! "$snapshot_command" create "pre legacy desktop runtime cleanup"; then
-        if [[ "${WINTARCH_ALLOW_NO_SNAPSHOT:-0}" == "1" ]]; then
-            SNAPSHOT_SKIPPED=true
-            echo "WARNING: Snapshot creation failed; continuing because WINTARCH_ALLOW_NO_SNAPSHOT=1."
-            return
-        fi
         echo "ERROR: Snapshot creation failed. No cleanup changes were made." >&2
         exit 1
     fi
@@ -350,7 +338,6 @@ print_summary() {
     echo
     echo "=== Legacy Desktop Runtime Cleanup Summary ==="
     echo "  Snapshot created: $SNAPSHOT_CREATED"
-    echo "  Snapshot explicitly skipped: $SNAPSHOT_SKIPPED"
     echo "  Plasma login preflight passed: $PLASMA_PREFLIGHT_PASSED"
     echo "  Installed COSMIC cleanup packages: $(join_by_space "${INSTALLED_COSMIC[@]}")"
     echo "  win11-clipboard-history-bin was installed: $CLIPBOARD_WAS_INSTALLED"
