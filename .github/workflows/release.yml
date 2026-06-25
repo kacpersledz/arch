@@ -100,9 +100,13 @@ jobs:
             git commit --amend -m "$COMMIT_MSG"
           fi
 
-          git tag $NEW_VERSION
+          if git rev-parse -q --verify "refs/tags/$NEW_VERSION" >/dev/null; then
+            git tag -d "$NEW_VERSION"
+          fi
+
+          git tag "$NEW_VERSION"
           git push origin master
-          git push origin $NEW_VERSION
+          git push origin "refs/tags/$NEW_VERSION:refs/tags/$NEW_VERSION"
 
       - name: Close Pull Request
         run: |
