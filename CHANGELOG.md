@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-06-25
+
+### Added
+
+-   **Hibernation Support for Existing Installs:** Added a migration to enable hibernation on the standard Wintarch encrypted BTRFS layout.
+    -   Migration `1782393600` configures `resume=/dev/mapper/cryptroot` and a calculated `resume_offset=` for `/swap/swapfile`
+    -   Inserts the `resume` hook in the classic mkinitcpio hook chain after `encrypt`
+    -   Rebuilds initramfs and refreshes Limine after enabling hibernation
+
+-   **Shared Hibernation Helper for Fresh Installs:** Fresh installs now configure hibernation directly during post-install using the same implementation path as the migration.
+    -   Added `install/hibernation.sh` to centralize mkinitcpio and Limine hibernation configuration
+    -   Fresh installs now calculate the BTRFS swapfile resume offset after `/swap/swapfile` is created
+    -   Keeps fresh installs and migration behavior aligned without duplicate parsing logic
+
+-   **First-Boot Unit Repair Migration:** Added a migration to restore the first-boot service on systems moved to Plasma.
+    -   Migration `1782307200` reinstalls and enables `wintarch-first-boot.service` on existing installs that need it
+
+### Changed
+
+-   **Fresh Install Hibernation Flow:** New installations now become hibernation-ready as part of install instead of depending on a later migration.
+    -   Updates `/etc/mkinitcpio.conf.d/wintarch.conf` with the required `resume` hook while preserving the Wintarch hook order
+    -   Updates `/etc/default/limine` instead of editing generated `/boot/limine.conf` directly
+    -   Preserves zram while configuring the swapfile-based resume target
+
+### Fixed
+
+-   **Installer Idempotency for Hibernation Setup:** Hardened fresh-install post-install behavior so reruns do not duplicate swap-related boot configuration.
+    -   Avoids duplicate `resume=` and `resume_offset=` kernel parameters
+    -   Avoids duplicate `resume` hooks in mkinitcpio
+    -   Avoids duplicate swap-related `fstab` entries during repeated post-install runs
+
 ## [0.6.0] - 2026-06-23
 
 ### Added
@@ -218,7 +249,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   **Git Pager:** Prevented `wintarch-update` from failing on minimal systems by setting `GIT_PAGER=cat`.
 -   **Git Ownership:** Fixed "dubious ownership" errors from `git` by adding `/opt/wintarch` to the system's `safe.directory` list during installation.
 
-[unreleased]: https://github.com/kacpersledz/arch/compare/v0.6.0...HEAD
+[unreleased]: https://github.com/kacpersledz/arch/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/kacpersledz/arch/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/kacpersledz/arch/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/kacpersledz/arch/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/kacpersledz/arch/compare/v0.3.2...v0.4.0
