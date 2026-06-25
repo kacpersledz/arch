@@ -15,6 +15,10 @@ chroot_run() {
     arch-chroot "$MOUNT_POINT" /bin/bash -c "$1"
 }
 
+chroot_run_script() {
+    arch-chroot "$MOUNT_POINT" /bin/bash -s
+}
+
 # --- MKINITCPIO OPTIMIZATION ---
 # Disable hooks during post-install configuration to prevent multiple rebuilds
 
@@ -362,14 +366,6 @@ install_limine_snapper_packages() {
         fi
     fi
 
-    # Update mkinitcpio hooks to include btrfs-overlayfs
-    echo "Updating mkinitcpio hooks for btrfs-overlayfs..." >&2
-    chroot_run "
-        if [ -f /usr/lib/initcpio/install/btrfs-overlayfs ]; then
-            sed -i 's/^HOOKS=.*/HOOKS=(base udev keyboard autodetect microcode modconf kms keymap consolefont block encrypt filesystems fsck btrfs-overlayfs)/' /etc/mkinitcpio.conf.d/wintarch.conf
-        fi
-    " 2>&1 | tee -a "$LOG_FILE" >&2
-
     # Enable the sync service
     echo "Enabling limine-snapper-sync service..." >&2
     chroot_run "systemctl enable limine-snapper-sync.service" 2>&1 | tee -a "$LOG_FILE" >&2 || {
@@ -446,15 +442,37 @@ EOF" 2>&1 | tee -a "$LOG_FILE" >&2
 
     # Add @swap subvolume to fstab (ensures it mounts on boot)
     echo "Adding @swap subvolume to fstab..." >&2
-    echo "/dev/mapper/cryptroot /swap btrfs subvol=@swap,compress=zstd,noatime 0 0" >> "$MOUNT_POINT/etc/fstab"
+    if ! grep -qxF "/dev/mapper/cryptroot /swap btrfs subvol=@swap,compress=zstd,noatime 0 0" "$MOUNT_POINT/etc/fstab"; then
+        echo "/dev/mapper/cryptroot /swap btrfs subvol=@swap,compress=zstd,noatime 0 0" >> "$MOUNT_POINT/etc/fstab"
+    fi
 
     # Add swapfile to fstab (priority 1 - lower than zram)
     echo "Adding swapfile to fstab..." >&2
-    echo "/swap/swapfile none swap defaults,pri=1 0 0" >> "$MOUNT_POINT/etc/fstab"
+    if ! grep -qxF "/swap/swapfile none swap defaults,pri=1 0 0" "$MOUNT_POINT/etc/fstab"; then
+        echo "/swap/swapfile none swap defaults,pri=1 0 0" >> "$MOUNT_POINT/etc/fstab"
+    fi
 
     log_success "Swap configured: ${ram_gb}GB swapfile + zram"
     echo "  Zram: $(( ram_gb / 2 ))GB compressed (priority 100 - fast swap)" >&2
     echo "  Swapfile: ${ram_gb}GB (priority 1 - fallback)" >&2
+}
+
+configure_hibernation() {
+    log_info "Configuring hibernation..."
+    echo >&2
+
+    install -D -m 0644 "$SCRIPT_DIR/hibernation.sh" \
+        "$MOUNT_POINT/usr/local/lib/wintarch-hibernation.sh"
+
+    chroot_run_script <<'EOF' 2>&1 | tee -a "$LOG_FILE" >&2
+set -euo pipefail
+source /usr/local/lib/wintarch-hibernation.sh
+export WINTARCH_HIBERNATION_ALLOW_CREATE_MKINITCPIO=true
+export WINTARCH_HIBERNATION_REQUIRE_OVERLAY_HOOK=true
+wintarch_enable_hibernation "Fresh install"
+EOF
+
+    log_success "Hibernation configured for fresh install"
 }
 
 # --- REBUILD AND UPDATE ---
@@ -470,12 +488,6 @@ rebuild_initramfs() {
 update_limine() {
     log_info "Installing Limine bootloader..."
     echo >&2
-
-    # Try limine-update first (from limine-mkinitcpio-hook)
-    if chroot_run "command -v limine-update" &>/dev/null; then
-        log_info "Running limine-update..."
-        chroot_run "limine-update" 2>&1 | tee -a "$LOG_FILE" >&2 || true
-    fi
 
     # Auto-detect and add Windows bootloader if limine-scan is available
     if chroot_run "command -v limine-scan" &>/dev/null; then
@@ -642,13 +654,16 @@ run_post_install() {
     # Install snapshot boot integration
     install_limine_snapper_packages
 
-    # Install user AUR packages (brave, vscode)
-    install_aur_packages || true
-
     # Setup swap (zram + swapfile)
     setup_swap
 
-    # Update Limine (this will trigger mkinitcpio automatically via hooks)
+    # Configure hibernation after swap and Limine integration are ready
+    configure_hibernation
+
+    # Install user AUR packages (brave, vscode)
+    install_aur_packages || true
+
+    # Finalize Limine installation without editing generated config directly
     update_limine
 
     # Final configuration
