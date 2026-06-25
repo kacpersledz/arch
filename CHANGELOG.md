@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-06-25
+
+### Fixed
+
+-   **Hibernation Poweroff Reliability:** Wintarch now configures systemd hibernation with `HibernateMode=shutdown` for both fresh installs and existing installs upgrading from `v0.7.0` or earlier.
+    -   Fresh installs write `/etc/systemd/sleep.conf.d/wintarch-hibernation.conf` during hibernation setup
+    -   Added migration `1782480000` to apply only the systemd sleep drop-in on existing systems without redoing resume, mkinitcpio, or Limine work
+    -   Keeps the existing swapfile, zram, mkinitcpio resume hook ordering, and `/etc/default/limine` resume configuration unchanged
+    -   Makes the change idempotent so reruns only update the managed sleep config file when needed
+
 ## [0.7.0] - 2026-06-25
 
 ### Added

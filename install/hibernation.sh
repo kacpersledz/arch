@@ -7,6 +7,8 @@ WINTARCH_HIBERNATION_LIMINE_DEFAULTS="${WINTARCH_HIBERNATION_LIMINE_DEFAULTS:-/e
 WINTARCH_HIBERNATION_CRYPTROOT_DEVICE="${WINTARCH_HIBERNATION_CRYPTROOT_DEVICE:-/dev/mapper/cryptroot}"
 WINTARCH_HIBERNATION_SWAP_MOUNTPOINT="${WINTARCH_HIBERNATION_SWAP_MOUNTPOINT:-/swap}"
 WINTARCH_HIBERNATION_SWAPFILE="${WINTARCH_HIBERNATION_SWAPFILE:-/swap/swapfile}"
+WINTARCH_HIBERNATION_SLEEP_CONF_DIR="${WINTARCH_HIBERNATION_SLEEP_CONF_DIR:-/etc/systemd/sleep.conf.d}"
+WINTARCH_HIBERNATION_SLEEP_CONF_FILE="${WINTARCH_HIBERNATION_SLEEP_CONF_FILE:-/etc/systemd/sleep.conf.d/wintarch-hibernation.conf}"
 WINTARCH_HIBERNATION_ALLOW_CREATE_MKINITCPIO="${WINTARCH_HIBERNATION_ALLOW_CREATE_MKINITCPIO:-false}"
 WINTARCH_HIBERNATION_REQUIRE_OVERLAY_HOOK="${WINTARCH_HIBERNATION_REQUIRE_OVERLAY_HOOK:-false}"
 
@@ -29,6 +31,7 @@ wintarch_hibernation_reset_state() {
     WINTARCH_HIBERNATION_LEGACY_DUPLICATE_REMOVED=false
     WINTARCH_HIBERNATION_HOOKS_UPDATED=false
     WINTARCH_HIBERNATION_LIMINE_UPDATED=false
+    WINTARCH_HIBERNATION_SLEEP_CONF_UPDATED=false
     WINTARCH_HIBERNATION_LIMINE_REFRESHED=false
     WINTARCH_HIBERNATION_MKINITCPIO_ACTION="use-preferred"
 }
@@ -366,8 +369,51 @@ wintarch_hibernation_refresh_boot_artifacts() {
     fi
 }
 
+wintarch_hibernation_ensure_sleep_config() {
+    local expected_content='[Sleep]
+HibernateMode=shutdown
+'
+    local current_content=""
+
+    mkdir -p "$WINTARCH_HIBERNATION_SLEEP_CONF_DIR"
+
+    if [[ -f "$WINTARCH_HIBERNATION_SLEEP_CONF_FILE" ]]; then
+        current_content="$(cat "$WINTARCH_HIBERNATION_SLEEP_CONF_FILE")"
+        current_content+=$'\n'
+    fi
+
+    if [[ "$current_content" != "$expected_content" ]]; then
+        printf '%s' "$expected_content" >"$WINTARCH_HIBERNATION_SLEEP_CONF_FILE"
+        WINTARCH_HIBERNATION_SLEEP_CONF_UPDATED=true
+    fi
+
+    chown root:root "$WINTARCH_HIBERNATION_SLEEP_CONF_FILE"
+    chmod 0644 "$WINTARCH_HIBERNATION_SLEEP_CONF_FILE"
+}
+
 wintarch_hibernation_print_recovery_hint() {
     echo "If resume fails, add \`noresume\` at the Limine boot entry or remove \`resume=\` and \`resume_offset=\` from /etc/default/limine, then run \`mkinitcpio -P\` and \`limine-update\`."
+}
+
+wintarch_hibernation_print_rollback_hint() {
+    echo "To return to systemd default hibernate mode, remove /etc/systemd/sleep.conf.d/wintarch-hibernation.conf."
+}
+
+wintarch_configure_hibernate_shutdown_mode() {
+    local context="${1:-Wintarch}"
+
+    wintarch_hibernation_reset_state
+    wintarch_hibernation_require_root
+    wintarch_hibernation_ensure_sleep_config
+
+    if [[ "$WINTARCH_HIBERNATION_SLEEP_CONF_UPDATED" == "true" ]]; then
+        echo "$context: hibernation shutdown mode configured."
+    else
+        echo "$context: hibernation shutdown mode already configured."
+    fi
+
+    echo "Wintarch configured HibernateMode=shutdown for reliable poweroff after writing the hibernation image."
+    wintarch_hibernation_print_rollback_hint
 }
 
 wintarch_enable_hibernation() {
@@ -385,28 +431,41 @@ wintarch_enable_hibernation() {
     wintarch_hibernation_update_hooks
     wintarch_hibernation_calculate_resume_offset
     wintarch_hibernation_update_limine_cmdline
-
-    echo "Hibernation resume offset: $WINTARCH_HIBERNATION_RESUME_OFFSET"
+    wintarch_hibernation_ensure_sleep_config
 
     if [[ "$WINTARCH_HIBERNATION_CONFIG_RENAMED" == "false" \
         && "$WINTARCH_HIBERNATION_CONFIG_CREATED" == "false" \
         && "$WINTARCH_HIBERNATION_LEGACY_DUPLICATE_REMOVED" == "false" \
         && "$WINTARCH_HIBERNATION_HOOKS_UPDATED" == "false" \
-        && "$WINTARCH_HIBERNATION_LIMINE_UPDATED" == "false" ]]; then
-        echo "$context: hibernation is already enabled for the expected Wintarch layout."
+        && "$WINTARCH_HIBERNATION_LIMINE_UPDATED" == "false" \
+        && "$WINTARCH_HIBERNATION_SLEEP_CONF_UPDATED" == "false" ]]; then
+        echo "$context: hibernation is enabled."
+        echo "resume offset: $WINTARCH_HIBERNATION_RESUME_OFFSET"
+        echo "Wintarch configured HibernateMode=shutdown for reliable poweroff after writing the hibernation image."
+        wintarch_hibernation_print_recovery_hint
+        wintarch_hibernation_print_rollback_hint
         return 0
     fi
 
-    wintarch_hibernation_refresh_boot_artifacts
+    if [[ "$WINTARCH_HIBERNATION_CONFIG_RENAMED" == "true" \
+        || "$WINTARCH_HIBERNATION_CONFIG_CREATED" == "true" \
+        || "$WINTARCH_HIBERNATION_LEGACY_DUPLICATE_REMOVED" == "true" \
+        || "$WINTARCH_HIBERNATION_HOOKS_UPDATED" == "true" \
+        || "$WINTARCH_HIBERNATION_LIMINE_UPDATED" == "true" ]]; then
+        wintarch_hibernation_refresh_boot_artifacts
+    fi
 
-    echo "$context: hibernation enabled."
+    echo "$context: hibernation is enabled."
     echo "mkinitcpio config: $WINTARCH_HIBERNATION_MKINITCPIO_CONF"
     echo "resume offset: $WINTARCH_HIBERNATION_RESUME_OFFSET"
+    echo "Wintarch configured HibernateMode=shutdown for reliable poweroff after writing the hibernation image."
     echo "config renamed: $WINTARCH_HIBERNATION_CONFIG_RENAMED"
     echo "config created: $WINTARCH_HIBERNATION_CONFIG_CREATED"
     echo "legacy duplicate removed: $WINTARCH_HIBERNATION_LEGACY_DUPLICATE_REMOVED"
     echo "hooks updated: $WINTARCH_HIBERNATION_HOOKS_UPDATED"
     echo "limine cmdline updated: $WINTARCH_HIBERNATION_LIMINE_UPDATED"
+    echo "sleep config updated: $WINTARCH_HIBERNATION_SLEEP_CONF_UPDATED"
     echo "limine-update run: $WINTARCH_HIBERNATION_LIMINE_REFRESHED"
     wintarch_hibernation_print_recovery_hint
+    wintarch_hibernation_print_rollback_hint
 }
