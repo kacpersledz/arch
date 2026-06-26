@@ -15,9 +15,6 @@ if command -v mise &> /dev/null; then
   eval "$(mise activate zsh)"
 fi
 
-# Claude Code
-[[ -d "$HOME/.local/bin" ]] && export PATH="$HOME/.local/bin:$PATH"
-
 # Wintarch extras
 [[ -f /opt/wintarch/user/dotfiles/zsh/aliases.zsh ]] && source /opt/wintarch/user/dotfiles/zsh/aliases.zsh
 [[ -f /opt/wintarch/user/dotfiles/zsh/wintarch.zsh ]] && source /opt/wintarch/user/dotfiles/zsh/wintarch.zsh
