@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+-   Removed Claude Code install and update steps from the user setup/update flow.
+
 ## [0.7.1] - 2026-06-25
 
 ### Fixed
