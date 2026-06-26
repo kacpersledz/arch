@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+-   Removed Claude Code install and update steps from the user setup/update flow.
+
 ## [0.7.1] - 2026-06-25
 
 ### Fixed
@@ -232,7 +236,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     -   `wintarch-migrations`: A migration system to handle changes on installed systems over time.
 -   **User Configuration System:** Added `wintarch-user-update` for managing user-level settings.
     -   Installs and manages Oh My Zsh with custom aliases and configurations.
-    -   Installs the Claude Code CLI and adds it to the user's PATH.
     -   Configures the COSMIC desktop dock and sets the default browser on first run.
 -   **Included Software & DEs:**
     -   **COSMIC Desktop:** Features System76's modern, Rust-based desktop environment.

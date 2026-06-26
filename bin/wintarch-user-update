@@ -107,9 +107,6 @@ run_setup() {
         echo "Skipping git setup"
     fi
 
-    # Install Claude Code
-    "$WINTARCH_PATH/user/scripts/claude-code.sh" setup
-
     # Configure zshrc
     setup_zshrc
 
@@ -137,9 +134,6 @@ run_update() {
 
     # Update OMZ and plugins
     "$WINTARCH_PATH/user/scripts/omz.sh" update
-
-    # Update Claude Code
-    "$WINTARCH_PATH/user/scripts/claude-code.sh" update
 
     # Update legacy COSMIC desktop configuration when COSMIC is present.
     run_cosmic_config_if_available update
