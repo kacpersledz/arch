@@ -34,88 +34,178 @@ jobs:
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
+      - name: Validate release command
+        run: |
+          set -euo pipefail
+
+          COMMENT_BODY=${{ toJSON(github.event.comment.body) }}
+          if [[ "$COMMENT_BODY" != "/release" ]]; then
+            echo "::error::Only the plain /release command is supported. Release strategy flags or other arguments are not allowed."
+            exit 1
+          fi
+
       - name: Get PR branch and validate version
         id: get_pr_branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.issue.number }}
         run: |
-          PR_JSON=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "${{ github.event.issue.pull_request.url }}")
-          BRANCH=$(echo "$PR_JSON" | jq -r .head.ref)
-          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+          set -euo pipefail
 
-          # Validate branch name matches vX.Y.Z pattern
+          BRANCH=$(gh pr view "$PR_NUMBER" --json headRefName --jq .headRefName)
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+
           if [[ ! "$BRANCH" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "::error::Branch name '$BRANCH' does not match required pattern 'vX.Y.Z' (e.g., v0.5.0). Only version branches can be released."
             exit 1
           fi
 
-          # Extract version from branch name
-          echo "version=$BRANCH" >> $GITHUB_OUTPUT
+          echo "version=$BRANCH" >> "$GITHUB_OUTPUT"
 
-      - name: Process release command
-        id: process_release
-        run: |
-          COMMENT_BODY="${{ github.event.comment.body }}"
-          MERGE_STRATEGY="--rebase" # Default to rebase
-
-          if [[ "$COMMENT_BODY" == *"--merge-commit"* ]]; then
-            MERGE_STRATEGY="--no-ff"
-          elif [[ "$COMMENT_BODY" == *"--squash"* ]]; then
-            MERGE_STRATEGY="--squash"
-          fi
-
-          echo "merge_strategy=$MERGE_STRATEGY" >> $GITHUB_OUTPUT
-
-      - name: Merge, Commit, Tag, and Push
+      - name: Preflight, prepare release commit, and tag
         id: release_commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH_NAME: ${{ steps.get_pr_branch.outputs.branch }}
+          NEW_VERSION: ${{ steps.get_pr_branch.outputs.version }}
         run: |
-          set -e
+          set -euo pipefail
 
-          MERGE_STRATEGY="${{ steps.process_release.outputs.merge_strategy }}"
-          BRANCH_NAME="${{ steps.get_pr_branch.outputs.branch }}"
-          NEW_VERSION="${{ steps.get_pr_branch.outputs.version }}"
-          PR_NUMBER="${{ github.event.issue.number }}"
+          echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
 
-          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-
-          git fetch origin $BRANCH_NAME
-
-          # Perform the merge
-          if [[ "$MERGE_STRATEGY" == "--rebase" ]]; then
-            git checkout $BRANCH_NAME
-            git rebase origin/master
-            git checkout master
-            git merge --ff-only $BRANCH_NAME
-          else
-            git merge $MERGE_STRATEGY origin/$BRANCH_NAME -m "feat: Merge changes from PR #$PR_NUMBER"
+          if [[ -n "$(git status --porcelain)" ]]; then
+            echo "::error::Working tree must be clean before release changes."
+            git status --short
+            exit 1
           fi
 
-          # Update version file from branch name
-          echo "$NEW_VERSION" > version
-          git add version
+          if git ls-remote --exit-code --tags origin "refs/tags/$NEW_VERSION" >/dev/null 2>&1; then
+            echo "::error::Remote tag '$NEW_VERSION' already exists."
+            exit 1
+          fi
 
-          # Create the final release commit
-          COMMIT_MSG="chore(release): $NEW_VERSION"
-          if [[ "$MERGE_STRATEGY" == "--squash" ]]; then
-            git commit -m "$COMMIT_MSG"
-          else
-            git commit --amend -m "$COMMIT_MSG"
+          if gh release view "$NEW_VERSION" >/dev/null 2>&1; then
+            echo "::error::GitHub Release '$NEW_VERSION' already exists."
+            exit 1
           fi
 
           if git rev-parse -q --verify "refs/tags/$NEW_VERSION" >/dev/null; then
-            git tag -d "$NEW_VERSION"
+            echo "::error::Local tag '$NEW_VERSION' already exists."
+            exit 1
+          fi
+
+          git fetch origin "master:refs/remotes/origin/master" "$BRANCH_NAME:refs/remotes/origin/$BRANCH_NAME"
+          git checkout -B "$BRANCH_NAME" "origin/$BRANCH_NAME"
+
+          echo /RELEASE_NOTES.md >> .git/info/exclude
+          CHANGELOG_VERSION=${NEW_VERSION#v}
+          python3 - "$CHANGELOG_VERSION" <<'PY'
+          import re
+          import sys
+          from pathlib import Path
+
+          version = sys.argv[1]
+          changelog = Path("CHANGELOG.md")
+          output = Path("RELEASE_NOTES.md")
+
+          if not changelog.exists():
+              print("::error::CHANGELOG.md is required for releases.")
+              sys.exit(1)
+
+          lines = changelog.read_text(encoding="utf-8").splitlines(keepends=True)
+          start_pattern = re.compile(rf"^## \[{re.escape(version)}\] - .+")
+          next_pattern = re.compile(r"^## \[[0-9]+\.[0-9]+\.[0-9]+\] - .+")
+
+          start = None
+          for index, line in enumerate(lines):
+              if start_pattern.match(line):
+                  start = index
+                  break
+
+          if start is None:
+              print(f"::error::CHANGELOG.md is missing a release heading for {version} matching '## [{version}] - ...'.")
+              sys.exit(1)
+
+          end = len(lines)
+          for index in range(start + 1, len(lines)):
+              if next_pattern.match(lines[index]):
+                  end = index
+                  break
+
+          section = "".join(lines[start:end])
+          body = "".join(lines[start + 1:end]).strip()
+          if not body:
+              print(f"::error::CHANGELOG.md section for {version} must contain release notes beyond the heading.")
+              sys.exit(1)
+
+          output.write_text(section, encoding="utf-8")
+          PY
+
+          if [[ ! -s RELEASE_NOTES.md ]]; then
+            echo "::error::RELEASE_NOTES.md is empty after extracting CHANGELOG.md notes."
+            exit 1
+          fi
+
+          git rebase origin/master || {
+            echo "::error::Release branch '$BRANCH_NAME' cannot rebase cleanly onto origin/master."
+            exit 1
+          }
+
+          git checkout master
+          git reset --hard origin/master
+          git merge --ff-only "$BRANCH_NAME" || {
+            echo "::error::master cannot fast-forward to rebased release branch '$BRANCH_NAME'."
+            exit 1
+          }
+
+          printf '%s\n' "$NEW_VERSION" > version
+          git add version
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(release): $NEW_VERSION"
           fi
 
           git tag "$NEW_VERSION"
-          git push origin master
-          git push origin "refs/tags/$NEW_VERSION:refs/tags/$NEW_VERSION"
 
-      - name: Close Pull Request
+          if [[ "$(cat version)" != "$NEW_VERSION" ]]; then
+            echo "::error::version file does not exactly equal '$NEW_VERSION'."
+            exit 1
+          fi
+
+          if ! git rev-parse -q --verify "refs/tags/$NEW_VERSION" >/dev/null; then
+            echo "::error::Local tag '$NEW_VERSION' was not created."
+            exit 1
+          fi
+
+          TAG_TARGET=$(git rev-parse "refs/tags/$NEW_VERSION")
+          HEAD_TARGET=$(git rev-parse HEAD)
+          if [[ "$TAG_TARGET" != "$HEAD_TARGET" ]]; then
+            echo "::error::Local tag '$NEW_VERSION' does not point to HEAD."
+            exit 1
+          fi
+
+          if [[ -n "$(git status --porcelain)" ]]; then
+            echo "::error::Working tree must be clean after release commit and tag."
+            git status --short
+            exit 1
+          fi
+
+      - name: Push master and release tag
         run: |
-          gh pr close ${{ github.event.issue.number }} --comment "Released in ${{ steps.release_commit.outputs.new_version }}"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          set -euo pipefail
+
+          git push origin master
+          git push origin "refs/tags/${{ steps.release_commit.outputs.new_version }}:refs/tags/${{ steps.release_commit.outputs.new_version }}"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.release_commit.outputs.new_version }}
-          generate_release_notes: true
+          body_path: RELEASE_NOTES.md
+
+      - name: Close Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          gh pr close ${{ github.event.issue.number }} --comment "Released in ${{ steps.release_commit.outputs.new_version }}"

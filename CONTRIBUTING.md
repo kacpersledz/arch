@@ -433,7 +433,9 @@ wintarch-migrations --status
 
 ## Release Process
 
-This project uses a semi-automated release process managed by a GitHub Action. The version is derived from the branch name, then a maintainer triggers the release by commenting on an approved pull request.
+This project uses a semi-automated release process managed by a GitHub Action. The version is derived from the release branch name, and a maintainer triggers the release by commenting on an approved pull request.
+
+The workflow uses the matching `CHANGELOG.md` section as the GitHub Release notes. It does not generate release notes from PR metadata.
 
 ### How to Release
 
@@ -453,40 +455,57 @@ git checkout -b v0.2.0
 git checkout -b v1.0.0
 ```
 
-The version file will be updated automatically from the branch name during release.
+The workflow owns updating the root `version` file from the branch name during release. Do not add a manual version-file-only release commit unless another change requires it.
 
-**2. Make changes and open PR**
+**2. Update CHANGELOG.md**
 
-Commit your changes and open a pull request.
+Add a section for the release using a plain semver heading without the leading `v`:
+```markdown
+## [0.2.0] - 2026-06-26
 
-**3. Get PR approved**
+- Describe the user-facing changes included in this release.
+```
+
+For branch `v0.2.0`, the workflow extracts the `## [0.2.0] - ...` section and uses that exact section as the GitHub Release body. The section must contain notes beyond the heading.
+
+**3. Make changes and open PR**
+
+Commit your changes and open a pull request from the version branch.
+
+**4. Get PR approved**
 
 Ensure the PR is reviewed and approved.
 
-**4. Comment on the PR**
+**5. Comment on the PR**
 
-Post a `/release` comment on the approved PR. Optionally specify merge strategy:
-- `/release` - Default (rebase and fast-forward)
-- `/release --squash` - Squash merge
-- `/release --merge-commit` - Create merge commit
+Post exactly this comment on the approved PR:
+```text
+/release
+```
 
-**5. Automation runs**
+Only plain `/release` is supported. Release strategy flags such as `/release --squash`, `/release --merge-commit`, or any other arguments are rejected.
+
+**6. Automation runs**
 
 The GitHub Action will:
-1. Validate branch name matches `vX.Y.Z` pattern
-2. Extract version from branch name
-3. Merge the PR using your chosen strategy (rebase by default)
-4. Update `version` file with the extracted version
-5. Create commit: `chore(release): v0.2.0`
-6. Tag the commit with the version
-7. Publish GitHub Release with auto-generated notes
-8. Close PR with link to release
+1. Validate the command is exactly `/release`
+2. Validate the branch name matches the `vX.Y.Z` pattern
+3. Verify the remote tag and GitHub Release do not already exist
+4. Extract non-empty release notes from the matching `CHANGELOG.md` section
+5. Rebase the release branch onto `origin/master`
+6. Fast-forward `master` to the rebased release branch
+7. Update the root `version` file with the branch version if needed
+8. Create a separate `chore(release): vX.Y.Z` commit only when the version file changed
+9. Tag the final release commit with the version
+10. Push `master`, push the tag, create the GitHub Release, then close the PR
+
+The release flow is always rebase plus fast-forward. Squash merges and merge commits are not supported by the release workflow.
 
 ### Versioning
 
 - Version derived from release branch name (e.g., `v0.5.0`)
 - Follows semantic versioning (vMAJOR.MINOR.PATCH)
-- Version file updated automatically during release
+- Root `version` file updated automatically during release
 - Displayed to users via `wintarch-version` command
 
 ## Code Style
