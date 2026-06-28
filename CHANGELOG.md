@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+-   `wintarch-update` now defaults to running both system and user updates from the update mode prompt.
+
 ## [0.8.0] - 2026-06-27
 
 ### Changed
