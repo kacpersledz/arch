@@ -68,6 +68,11 @@ configure_snapper() {
     log "Enabling btrfs quota..."
     btrfs quota enable / 2>&1 | tee -a "$LOG_FILE" || true
 
+    # Enable automatic cleanup for number snapshots.
+    # Timeline snapshots remain disabled via TIMELINE_CREATE above.
+    log "Enabling snapper cleanup timer..."
+    systemctl enable --now snapper-cleanup.timer 2>&1 | tee -a "$LOG_FILE" || true
+
     log "Snapper configuration complete"
 }
 
