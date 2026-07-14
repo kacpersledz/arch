@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+-   **Automatic Snapper Cleanup:** Fresh installations now enable `snapper-cleanup.timer`, and existing installations clean up excess number snapshots before enabling the cleanup timer through migration `1782576000`.
+
 ## [0.9.0] - 2026-06-28
 
 ### Changed
