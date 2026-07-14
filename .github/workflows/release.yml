@@ -218,4 +218,17 @@ jobs:
         run: |
           set -euo pipefail
 
-          gh pr close ${{ github.event.issue.number }} --comment "Released in ${{ steps.release_commit.outputs.new_version }}"
+          PR_NUMBER=${{ github.event.issue.number }}
+          PR_STATE=$(gh pr view "$PR_NUMBER" --json state --jq .state)
+
+          if [[ "$PR_STATE" == "MERGED" ]]; then
+            echo "Pull request #$PR_NUMBER was merged by the fast-forward release flow."
+            exit 0
+          fi
+
+          if [[ "$PR_STATE" != "OPEN" ]]; then
+            echo "::error::Pull request #$PR_NUMBER is in unexpected state: $PR_STATE"
+            exit 1
+          fi
+
+          gh pr close "$PR_NUMBER" --comment "Released in ${{ steps.release_commit.outputs.new_version }}"
