@@ -1,0 +1,4 @@
+interface:
+  display_name: "Wintarch Release"
+  short_description: "Prepare a safe Wintarch release PR"
+  default_prompt: "Use $wintarch-release to prepare the current version branch for release."
