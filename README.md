@@ -148,6 +148,10 @@ Wintarch automatically configures smart swap for optimal performance:
 
 The system uses zram first for speed, then falls back to the swapfile when needed.
 
+## Troubleshooting
+
+See [Troubleshooting](docs/troubleshooting/README.md) for hardware-, firmware-, and system-specific issues and workarounds.
+
 ## Differences from Omarchy
 
 | Aspect | Omarchy | Wintarch |
